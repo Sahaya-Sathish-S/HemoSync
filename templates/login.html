@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#081a38"><title>HemoSync | Account</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+<style>
+:root{--blue:#1677ef;--red:#ed294b;--ink:#13264a;--muted:#71809a}*{box-sizing:border-box}
+body{margin:0;min-height:100vh;font-family:"DM Sans",sans-serif;color:var(--ink);background:#eaf3ff}
+button,input,select{font:inherit}.page{min-height:100vh;display:grid;place-items:center;padding:32px 18px;position:relative;isolation:isolate}
+.page:before{content:"";position:fixed;inset:0;z-index:-2;background-image:linear-gradient(115deg,rgba(4,23,56,.72),rgba(7,57,119,.38),rgba(15,26,68,.55)),url("{{ url_for('static', filename='images/background_computer.png') }}");background-position:center;background-size:cover;background-repeat:no-repeat}
+.page:after{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(circle at 14% 18%,#31d8ff3d,transparent 27%),radial-gradient(circle at 87% 80%,#ef29483b,transparent 28%)}
+.shell{width:min(100%,1040px);min-height:650px;display:grid;grid-template-columns:1fr 1fr;border:1px solid #ffffff80;border-radius:30px;overflow:hidden;background:#ffffff22;box-shadow:0 28px 90px #0005,0 0 45px #31d8ff20;backdrop-filter:blur(22px)}
+.brand{padding:48px 44px;color:white;display:flex;flex-direction:column;justify-content:space-between;position:relative;overflow:hidden;background:linear-gradient(145deg,#052252ed,#09539ec7 60%,#0f1848e8)}
+.brand:before,.brand:after{content:"";position:absolute;border:1px solid #5fdcff40;border-radius:50%;pointer-events:none}.brand:before{width:430px;height:430px;right:-205px;top:90px;box-shadow:0 0 50px #31d8ff24,inset 0 0 45px #31d8ff14}.brand:after{width:300px;height:300px;right:-140px;top:155px;border-color:#ffffff30}
+.brand-content,.brand-bottom{position:relative;z-index:1}.logo{display:flex;align-items:center;gap:12px;font:800 27px Manrope;letter-spacing:-.8px}.logo .mark{width:48px;height:48px;display:grid;place-items:center;border-radius:16px;color:white;font-size:22px;background:linear-gradient(145deg,#ff3158,#d90c39 55%,#0879e9);box-shadow:0 8px 28px #ff23594d,0 0 20px #31d8ff40}.logo span span{color:#5edfff}
+.eyebrow{display:inline-flex;gap:8px;margin-top:76px;padding:8px 13px;border:1px solid #ffffff40;border-radius:99px;color:#bceeff;background:#ffffff17;font-size:11px;font-weight:700;letter-spacing:1.3px}
+.brand h1{max-width:420px;margin:20px 0 15px;font:800 clamp(32px,4vw,48px)/1.12 Manrope;letter-spacing:-1.7px}.brand h1 em{color:#70e6ff;font-style:normal}.brand p{max-width:390px;color:#ebf7ffc7;font-size:15px;line-height:1.8}
+.chips{display:flex;flex-wrap:wrap;gap:10px;margin-top:30px}.chip{padding:10px 12px;border-radius:12px;border:1px solid #ffffff30;background:#ffffff14;color:#e7f8ff;font-size:12px}.chip i{color:#71e8ff;margin-right:6px}.brand-bottom{color:#e6f4ffa8;font-size:12px}
+.panel{padding:44px clamp(25px,4vw,54px);background:linear-gradient(150deg,#fffffff5,#f4f9ffe8);display:flex;flex-direction:column;justify-content:center}
+.mobile-logo{display:none;justify-content:center;margin-bottom:22px}.heading{margin-bottom:25px}.mini{color:#e02b4b;font-size:11px;font-weight:800;letter-spacing:1.6px;text-transform:uppercase}.heading h2{margin:8px 0 7px;font:800 30px/1.2 Manrope;letter-spacing:-.8px;color:#10264b}.heading p{margin:0;color:var(--muted);font-size:13px;line-height:1.6}
+.tabs{display:grid;grid-template-columns:1fr 1fr;gap:5px;padding:5px;margin-bottom:23px;border-radius:13px;background:#eaf0f8}.tab{border:0;border-radius:10px;padding:11px;color:#71809a;background:transparent;font-size:13px;font-weight:700;cursor:pointer}.tab.active{color:white;background:linear-gradient(100deg,#e92348,#f04461 48%,#1677ef);box-shadow:0 6px 16px #1e66cc33}
+.field{margin-bottom:15px}.field label{display:block;margin:0 0 7px;color:#263b5e;font-size:12px;font-weight:700}.wrap{position:relative}.wrap>i{position:absolute;left:15px;top:50%;transform:translateY(-50%);color:#8b9bb4;font-size:14px;pointer-events:none}
+.wrap input,.wrap select{width:100%;height:48px;padding:0 44px 0 43px;border:1px solid #dce5f1;border-radius:12px;outline:none;background:#ffffffe0;color:#15294d;font-size:13px;transition:.2s}.wrap select{appearance:none;cursor:pointer}.wrap input::placeholder{color:#a0aec1}.wrap input:focus,.wrap select:focus{border-color:#42a8f5;background:white;box-shadow:0 0 0 4px #2c9eef1c,0 0 18px #31d8ff1f}
+.chevron{position:absolute;right:15px;top:50%;transform:translateY(-50%);color:#8292aa;pointer-events:none}.toggle{position:absolute;right:13px;top:50%;transform:translateY(-50%);border:0;background:transparent;color:#8797ae;cursor:pointer;padding:5px}
+.note{margin:6px 0 0;color:#8290a5;font-size:10px;line-height:1.45}.options{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:2px 0 17px;font-size:11px;color:#71809a}.remember{display:inline-flex;align-items:center;gap:7px}.remember input{accent-color:#1677ef}.link{color:#1677df;font-weight:700;text-decoration:none}
+.submit{width:100%;min-height:49px;border:0;border-radius:13px;color:white;font-size:14px;font-weight:800;cursor:pointer;background:linear-gradient(100deg,#ed2448,#dc245d 42%,#1478e9);box-shadow:0 10px 22px #cc245433,0 0 20px #31d8ff1f;transition:.2s}.submit:hover{transform:translateY(-2px);box-shadow:0 14px 28px #cc245544,0 0 25px #31d8ff33}
+.or{display:flex;align-items:center;gap:12px;margin:19px 0;color:#99a6b8;font-size:10px;font-weight:700;letter-spacing:1px}.or:before,.or:after{content:"";height:1px;flex:1;background:#e1e8f1}
+.google{width:100%;min-height:46px;border:1px solid #dce5ef;border-radius:12px;background:#ffffffcc;color:#344563;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:10px;cursor:pointer;text-decoration:none}.google:hover{border-color:#9dcaf3;background:white;box-shadow:0 5px 16px #1e64aa14}.g{font:800 18px Arial;background:conic-gradient(from -45deg,#4285f4 0 25%,#34a853 25% 48%,#fbbc05 48% 70%,#ea4335 70%);color:transparent;background-clip:text}
+.terms{margin:17px 0 0;text-align:center;color:#8794a8;font-size:10px;line-height:1.6}.terms a{color:#53739d;text-decoration:none;font-weight:700}.alert{display:none;margin-bottom:14px;padding:10px 12px;border-radius:10px;font-size:12px}.alert.error{display:block;color:#a21d38;background:#fff0f2;border:1px solid #ffd3db}.alert.success{display:block;color:#17633d;background:#eafaf1;border:1px solid #c6efd8}.hidden{display:none!important}
+@media(max-width:800px){.page{padding:16px 12px}.page:before{background-image:linear-gradient(145deg,#05173899,#0832684d,#0c19418c),url("{{ url_for('static', filename='images/background_mobile.png') }}");background-position:center;background-size:cover}.shell{width:min(100%,520px);min-height:auto;grid-template-columns:1fr;border-radius:24px}.brand{display:none}.panel{padding:28px clamp(20px,6vw,34px) 25px;border-radius:24px}.mobile-logo{display:flex}.mobile-logo .logo{color:#102b55;font-size:23px}.mobile-logo .mark{width:42px;height:42px;font-size:19px}.heading{text-align:center;margin-bottom:20px}.heading h2{font-size:27px}}
+@media(max-width:390px){.page{padding:10px 8px}.panel{padding:23px 17px 20px}.heading h2{font-size:24px}.field{margin-bottom:12px}.wrap input,.wrap select{height:46px}.options{font-size:10px}}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{transition-duration:.01ms!important}}
+</style>
+</head>
+<body>
+<main class="page">
+<section class="shell" aria-label="HemoSync account access">
+<aside class="brand">
+<div class="brand-content">
+<div class="logo"><div class="mark"><i class="fa-solid fa-droplet"></i></div><span>Hemo<span>Sync</span></span></div>
+<div class="eyebrow"><i class="fa-solid fa-heart-pulse"></i> CONNECT · DONATE · SAVE LIVES</div>
+<h1>One community.<br><em>Countless lives.</em></h1>
+<p>Join a connected blood donation community. Support donors, camps, blood banks and hospitals through one trusted platform.</p>
+<div class="chips"><span class="chip"><i class="fa-solid fa-shield-heart"></i>Community first</span><span class="chip"><i class="fa-solid fa-hand-holding-heart"></i>Every donation matters</span></div>
+</div>
+<div class="brand-bottom">© <span id="year"></span> HemoSync · Together, we make a difference.</div>
+</aside>
+<section class="panel">
+<div class="mobile-logo"><div class="logo"><div class="mark"><i class="fa-solid fa-droplet"></i></div><span>Hemo<span style="color:#1677ef">Sync</span></span></div></div>
+<header class="heading"><div class="mini">Welcome to HemoSync</div><h2 id="heading">Create your account</h2><p id="subheading">Join the community and make every contribution count.</p></header>
+<div class="tabs" role="tablist"><button class="tab active" id="signupTab" type="button" role="tab" aria-selected="true">Sign up</button><button class="tab" id="loginTab" type="button" role="tab" aria-selected="false">Log in</button></div>
+<div id="formAlert" class="alert" role="status" aria-live="polite"></div>
+<form id="signupForm" action="{{ url_for('signup') }}" method="POST">
+<div class="field"><label for="signupName">Full name</label><div class="wrap"><i class="fa-regular fa-user"></i><input id="signupName" name="name" type="text" placeholder="Enter your full name" autocomplete="name" minlength="2" maxlength="100" required></div></div>
+<div class="field"><label for="signupEmail">Email address</label><div class="wrap"><i class="fa-regular fa-envelope"></i><input id="signupEmail" name="email" type="email" placeholder="you@example.com" autocomplete="email" maxlength="254" required></div></div>
+<div class="field"><label for="signupRole">Choose your role</label><div class="wrap"><i class="fa-solid fa-users"></i><select id="signupRole" name="role" required><option value="" selected disabled>Select your account type</option><option value="donator">Donator</option><option value="hospital_manager">Hospital Manager</option><option value="camp_organizer">Camp Organizer</option><option value="blood_bank_manager">Blood Bank Manager</option><option value="admin">Admin</option><option value="normal_user">Normal User</option><option value="student">Student</option></select><i class="fa-solid fa-chevron-down chevron"></i></div><p class="note">Organization accounts may require verification. Admin access must be granted only by the platform owner.</p></div>
+<div class="field"><label for="signupPassword">Password</label><div class="wrap"><i class="fa-solid fa-lock"></i><input id="signupPassword" name="password" type="password" placeholder="Create a strong password" autocomplete="new-password" minlength="8" required><button class="toggle" type="button" data-target="signupPassword" aria-label="Show password"><i class="fa-regular fa-eye"></i></button></div></div>
+<div class="field"><label for="confirmPassword">Confirm password</label><div class="wrap"><i class="fa-solid fa-lock"></i><input id="confirmPassword" name="confirm_password" type="password" placeholder="Enter your password again" autocomplete="new-password" minlength="8" required><button class="toggle" type="button" data-target="confirmPassword" aria-label="Show password"><i class="fa-regular fa-eye"></i></button></div></div>
+<button class="submit" type="submit">Create account <i class="fa-solid fa-arrow-right"></i></button>
+</form>
+<form id="loginForm" class="hidden" action="{{ url_for('login') }}" method="POST">
+<div class="field"><label for="loginEmail">Email address</label><div class="wrap"><i class="fa-regular fa-envelope"></i><input id="loginEmail" name="email" type="email" placeholder="you@example.com" autocomplete="email" required></div></div>
+<div class="field"><label for="loginPassword">Password</label><div class="wrap"><i class="fa-solid fa-lock"></i><input id="loginPassword" name="password" type="password" placeholder="Enter your password" autocomplete="current-password" required><button class="toggle" type="button" data-target="loginPassword" aria-label="Show password"><i class="fa-regular fa-eye"></i></button></div></div>
+<div class="options"><label class="remember"><input type="checkbox" name="remember"> Remember me</label><a class="link" href="{{ url_for('forgot_password') }}">Forgot password?</a></div>
+<button class="submit" type="submit">Log in to HemoSync <i class="fa-solid fa-arrow-right"></i></button>
+</form>
+<div class="or">OR CONTINUE WITH</div>
+<a class="google" href="{{ url_for('google_login') }}"><span class="g">G</span> Continue with Google</a>
+<p class="terms">By continuing, you agree to our <a href="{{ url_for('terms') }}">Terms</a> and <a href="{{ url_for('privacy') }}">Privacy Policy</a>.</p>
+</section></section></main>
+<script>
+const signupTab=document.getElementById("signupTab"),loginTab=document.getElementById("loginTab"),signupForm=document.getElementById("signupForm"),loginForm=document.getElementById("loginForm"),heading=document.getElementById("heading"),subheading=document.getElementById("subheading"),alertBox=document.getElementById("formAlert");
+document.getElementById("year").textContent=new Date().getFullYear();
+function showMode(mode){const s=mode==="signup";signupForm.classList.toggle("hidden",!s);loginForm.classList.toggle("hidden",s);signupTab.classList.toggle("active",s);loginTab.classList.toggle("active",!s);signupTab.setAttribute("aria-selected",String(s));loginTab.setAttribute("aria-selected",String(!s));heading.textContent=s?"Create your account":"Welcome back";subheading.textContent=s?"Join the community and make every contribution count.":"Log in to continue your HemoSync journey.";alertBox.className="alert";alertBox.textContent=""}
+signupTab.addEventListener("click",()=>showMode("signup"));loginTab.addEventListener("click",()=>showMode("login"));
+document.querySelectorAll(".toggle").forEach(b=>b.addEventListener("click",()=>{const input=document.getElementById(b.dataset.target),show=input.type==="password";input.type=show?"text":"password";b.innerHTML=show?'<i class="fa-regular fa-eye-slash"></i>':'<i class="fa-regular fa-eye"></i>';b.setAttribute("aria-label",show?"Hide password":"Show password")}));
+signupForm.addEventListener("submit",e=>{if(document.getElementById("signupPassword").value!==document.getElementById("confirmPassword").value){e.preventDefault();alertBox.className="alert error";alertBox.textContent="Your passwords do not match. Please check and try again.";document.getElementById("confirmPassword").focus()}});
+if(window.HEMOSYNC_FLASH&&window.HEMOSYNC_FLASH.message){alertBox.className="alert "+(window.HEMOSYNC_FLASH.type==="success"?"success":"error");alertBox.textContent=window.HEMOSYNC_FLASH.message}
+</script>
+</body></html>
