@@ -818,15 +818,26 @@ button:disabled {
 
 
 <script>
+
+<script>
 /* ========================================
-   HEMOSYNC SUPABASE CONFIGURATION
+   HEMOSYNC CONFIGURATION
+   Matches your Flask app.py routes
 ======================================== */
 
-const SUPABASE_URL = "{{ supabase_url }}";
-const SUPABASE_KEY = "{{ supabase_publishable_key }}";
+const SUPABASE_URL = {{ supabase_url | tojson }};
+const SUPABASE_KEY = {{ supabase_publishable_key | tojson }};
+
+const LOGIN_URL = {{ url_for('login') | tojson }};
+const HOME_URL = {{ url_for('home') | tojson }};
+const SESSION_URL = {{ url_for('establish_session') | tojson }};
 
 if (!SUPABASE_URL || !SUPABASE_KEY) {
-    console.error("Supabase configuration is missing.");
+    throw new Error("Supabase configuration is missing.");
+}
+
+if (!window.supabase) {
+    throw new Error("Supabase library could not be loaded.");
 }
 
 const supabaseClient = window.supabase.createClient(
@@ -843,7 +854,7 @@ const supabaseClient = window.supabase.createClient(
 
 
 /* ========================================
-   ELEMENTS
+   HTML ELEMENTS
 ======================================== */
 
 const signupTab = document.getElementById("signupTab");
@@ -856,14 +867,16 @@ const heading = document.getElementById("heading");
 const subheading = document.getElementById("subheading");
 const alertBox = document.getElementById("formAlert");
 
+const signupButton = document.getElementById("signupButton");
+const loginButton = document.getElementById("loginButton");
+const googleButton = document.getElementById("googleLoginBtn");
+
 document.getElementById("year").textContent =
     new Date().getFullYear();
 
-const HOME_URL = "{{ url_for('home') }}";
-
 
 /* ========================================
-   ALERT MESSAGE
+   ALERT MESSAGES
 ======================================== */
 
 function showAlert(message, type = "error") {
@@ -932,69 +945,153 @@ document.querySelectorAll(".toggle").forEach(button => {
 
 
 /* ========================================
+   IMPORTANT:
+   EXCHANGE SUPABASE TOKEN WITH FLASK
+
+   Supabase authenticates the user.
+   Flask verifies the access token and
+   creates the server-side app session.
+======================================== */
+
+let sessionExchangeInProgress = false;
+
+async function establishFlaskSession(accessToken) {
+
+    if (!accessToken) {
+        throw new Error("Authentication token is missing.");
+    }
+
+    if (sessionExchangeInProgress) {
+        return;
+    }
+
+    sessionExchangeInProgress = true;
+
+    try {
+
+        const response = await fetch(SESSION_URL, {
+            method: "POST",
+            credentials: "same-origin",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                access_token: accessToken
+            })
+        });
+
+        const result = await response.json();
+
+        if (!response.ok || !result.success) {
+            throw new Error(
+                result.message || "Unable to create your HemoSync session."
+            );
+        }
+
+        if (!result.redirect) {
+            throw new Error("Dashboard redirect was not provided.");
+        }
+
+        // Flask has successfully created the session.
+        window.location.replace(result.redirect);
+
+    } finally {
+        sessionExchangeInProgress = false;
+    }
+}
+
+
+/* ========================================
    SIGNUP
 ======================================== */
 
 signupForm.addEventListener("submit", async (event) => {
+
     event.preventDefault();
     clearAlert();
 
     if (!signupForm.reportValidity()) return;
 
-    const name = document.getElementById("signupName").value.trim();
-    const email = document.getElementById("signupEmail").value.trim();
+    const name = document.getElementById("signupName")
+        .value.trim();
+
+    const email = document.getElementById("signupEmail")
+        .value.trim();
+
     const role = document.getElementById("signupRole").value;
 
-    const password = document.getElementById("signupPassword").value;
-    const confirm = document.getElementById("confirmPassword").value;
+    const password = document.getElementById("signupPassword")
+        .value;
+
+    const confirmPassword = document.getElementById("confirmPassword")
+        .value;
 
     if (name.length < 2) {
         showAlert("Please enter your full name.");
         return;
     }
 
-    if (password !== confirm) {
+    if (password !== confirmPassword) {
         showAlert("Your passwords do not match.");
         document.getElementById("confirmPassword").focus();
         return;
     }
 
-    const button = document.getElementById("signupButton");
-    button.disabled = true;
-    button.textContent = "Creating account...";
+    signupButton.disabled = true;
+    signupButton.textContent = "Creating account...";
 
     try {
-        const { data, error } = await supabaseClient.auth.signUp({
-            email: email,
-            password: password,
-            options: {
-                data: {
-                    full_name: name,
-                    role: role
-                },
-                emailRedirectTo: window.location.origin + HOME_URL
-            }
-        });
+
+        const { data, error } =
+            await supabaseClient.auth.signUp({
+
+                email: email,
+                password: password,
+
+                options: {
+                    data: {
+                        full_name: name,
+                        role: role
+                    },
+
+                    // Return to the login page after email verification.
+                    emailRedirectTo:
+                        window.location.origin + LOGIN_URL
+                }
+            });
 
         if (error) throw error;
 
         if (data.session) {
-            showAlert("Account created successfully!", "success");
-            window.location.assign(HOME_URL);
-        } else {
+
             showAlert(
-                "Registration successful! Please verify your email before logging in.",
+                "Account created. Setting up your HemoSync account...",
                 "success"
             );
+
+            await establishFlaskSession(
+                data.session.access_token
+            );
+
+        } else {
+
+            showAlert(
+                "Registration successful! Please verify your email. After verification, return to HemoSync and log in.",
+                "success"
+            );
+
+            signupForm.reset();
         }
 
-        signupForm.reset();
-
     } catch (error) {
-        showAlert(error.message);
+
+        showAlert(error.message || "Account registration failed.");
+
     } finally {
-        button.disabled = false;
-        button.innerHTML =
+
+        signupButton.disabled = false;
+
+        signupButton.innerHTML =
             'Create account <i class="fa-solid fa-arrow-right"></i>';
     }
 });
@@ -1005,38 +1102,56 @@ signupForm.addEventListener("submit", async (event) => {
 ======================================== */
 
 loginForm.addEventListener("submit", async (event) => {
+
     event.preventDefault();
     clearAlert();
 
     if (!loginForm.reportValidity()) return;
 
-    const email = document.getElementById("loginEmail").value.trim();
-    const password = document.getElementById("loginPassword").value;
+    const email = document.getElementById("loginEmail")
+        .value.trim();
 
-    const button = document.getElementById("loginButton");
-    button.disabled = true;
-    button.textContent = "Logging in...";
+    const password = document.getElementById("loginPassword")
+        .value;
+
+    loginButton.disabled = true;
+    loginButton.textContent = "Verifying account...";
 
     try {
+
         const { data, error } =
             await supabaseClient.auth.signInWithPassword({
+
                 email: email,
                 password: password
+
             });
 
         if (error) throw error;
 
         if (!data.session) {
-            throw new Error("Unable to create a login session.");
+            throw new Error("Supabase did not return a login session.");
         }
 
-        window.location.assign(HOME_URL);
+        showAlert(
+            "Login successful. Opening HemoSync...",
+            "success"
+        );
+
+        // Send the token to Flask.
+        await establishFlaskSession(
+            data.session.access_token
+        );
 
     } catch (error) {
-        showAlert(error.message);
+
+        showAlert(error.message || "Login failed.");
+
     } finally {
-        button.disabled = false;
-        button.innerHTML =
+
+        loginButton.disabled = false;
+
+        loginButton.innerHTML =
             'Log in to HemoSync <i class="fa-solid fa-arrow-right"></i>';
     }
 });
@@ -1046,24 +1161,28 @@ loginForm.addEventListener("submit", async (event) => {
    GOOGLE OAUTH LOGIN
 ======================================== */
 
-document.getElementById("googleLoginBtn")
-.addEventListener("click", async () => {
+googleButton.addEventListener("click", async () => {
 
-    const button = document.getElementById("googleLoginBtn");
-
-    button.disabled = true;
-    button.textContent = "Connecting to Google...";
+    googleButton.disabled = true;
+    googleButton.textContent = "Connecting to Google...";
 
     clearAlert();
 
     try {
+
         const { error } =
             await supabaseClient.auth.signInWithOAuth({
+
                 provider: "google",
+
                 options: {
-                    redirectTo: window.location.origin + HOME_URL,
+
+                    // Google authentication returns to /login.
+                    // Supabase JS processes the OAuth callback.
+                    redirectTo:
+                        window.location.origin + LOGIN_URL,
+
                     queryParams: {
-                        access_type: "online",
                         prompt: "select_account"
                     }
                 }
@@ -1072,9 +1191,14 @@ document.getElementById("googleLoginBtn")
         if (error) throw error;
 
     } catch (error) {
-        showAlert("Google login failed: " + error.message);
-        button.disabled = false;
-        button.innerHTML =
+
+        showAlert(
+            "Google login failed: " + error.message
+        );
+
+        googleButton.disabled = false;
+
+        googleButton.innerHTML =
             '<span class="g">G</span> Continue with Google';
     }
 });
@@ -1088,8 +1212,10 @@ document.getElementById("forgotPassword")
 .addEventListener("click", async (event) => {
 
     event.preventDefault();
+    clearAlert();
 
-    const email = document.getElementById("loginEmail").value.trim();
+    const email = document.getElementById("loginEmail")
+        .value.trim();
 
     if (!email) {
         showAlert("Enter your email address first.");
@@ -1098,43 +1224,85 @@ document.getElementById("forgotPassword")
     }
 
     try {
+
         const { error } =
-            await supabaseClient.auth.resetPasswordForEmail(email, {
-                redirectTo: window.location.origin + "/reset-password"
-            });
+            await supabaseClient.auth.resetPasswordForEmail(
+                email,
+                {
+                    redirectTo:
+                        window.location.origin + "/reset-password"
+                }
+            );
 
         if (error) throw error;
 
         showAlert(
-            "If an account exists for this address, a password reset email will be sent.",
+            "If an account exists for this email, a password reset link will be sent.",
             "success"
         );
 
     } catch (error) {
+
         showAlert(error.message);
     }
 });
 
 
 /* ========================================
-   AUTHENTICATION ERROR HANDLING
+   AUTHENTICATION CALLBACK HANDLING
+
+   Handles:
+   - Google OAuth callback
+   - Email verification callback
+   - Existing Supabase session
 ======================================== */
 
-const authError = new URLSearchParams(window.location.search)
-    .get("error_description");
+async function handleAuthenticationCallback() {
 
-if (authError) {
-    showAlert(authError);
+    try {
+
+        // Supabase JS detects and processes the callback URL.
+        const { data, error } =
+            await supabaseClient.auth.getSession();
+
+        if (error) throw error;
+
+        const authError =
+            new URLSearchParams(window.location.search)
+                .get("error_description");
+
+        if (authError) {
+            showAlert(authError);
+            return;
+        }
+
+        // If a Supabase session exists, exchange it with Flask.
+        if (data.session) {
+
+            showAlert(
+                "Authentication successful. Setting up your HemoSync session...",
+                "success"
+            );
+
+            await establishFlaskSession(
+                data.session.access_token
+            );
+        }
+
+    } catch (error) {
+
+        showAlert(
+            error.message || "Unable to complete authentication."
+        );
+    }
 }
 
-/* Check whether an existing session is available */
-(async () => {
-    const { data } = await supabaseClient.auth.getSession();
 
-    if (data.session) {
-        window.location.replace(HOME_URL);
-    }
-})();
+/* ========================================
+   INITIALIZE LOGIN PAGE
+======================================== */
+
+handleAuthenticationCallback();
 
 </script>
 
