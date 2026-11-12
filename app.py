@@ -38,7 +38,7 @@ SUPABASE_KEY = os.environ.get("SUPABASE_PUBLISHABLE_KEY")
 if not SUPABASE_URL or not SUPABASE_KEY:
     raise RuntimeError("Supabase URL or publishable key is missing.")
 
-DATABASE = os.path.join(app.root_path, "hemosync_sessions.db")
+DATABASE = "/tmp/hemosync_sessions.db"
 
 
 # --------------------------------------------------
